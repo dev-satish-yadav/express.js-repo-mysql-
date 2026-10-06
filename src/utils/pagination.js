@@ -13,11 +13,11 @@ const sortFilterPagination = (page, limit, totalRecord, sortData = {}, sortParam
     let prev_enable = current_page > 1;
     let next_enable = current_page < total_pages;
     
-    let sort = {};
+    let sort = [];
     if (sortParam && sortData[sortParam]) {
-        sort[sortData[sortParam]] = sortType === 'desc' ? -1 : 1;
+        sort.push([sortData[sortParam], sortType === 'desc' ? 'DESC' : 'ASC']);
     } else {
-        sort = { _id: -1 };
+        sort.push(['id', 'DESC']);
     }
     
     return {

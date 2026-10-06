@@ -27,32 +27,26 @@ class AdminService {
 
   async findAll(query = {}) {
     const { page, limit, sort, sort_type, ...filters } = query;
-    // We should parse sort and limit for Sequelize
-    const parsedPage = parseInt(page) || 1;
-    const parsedLimit = parseInt(limit) || 10;
-    const offset = (parsedPage - 1) * parsedLimit;
-    const order = [];
-    if (sort) {
-      order.push([sort, sort_type === 'desc' ? 'DESC' : 'ASC']);
-    }
-
-    const { count, rows } = await Admin.findAndCountAll({
+    const sortData = { id: 'id', email: 'email', name: 'name' };
+    
+    const totalRecord = await Admin.count({ where: filters });
+    const pagination = sortFilterPagination(page, limit, totalRecord, sortData, sort, sort_type);
+    
+    const { rows } = await Admin.findAndCountAll({
       where: filters,
-      limit: parsedLimit,
-      offset,
-      order: order.length ? order : undefined
+      order: pagination.sort,
+      offset: pagination.start_from,
+      limit: pagination.per_page
     });
       
-    const total_pages = Math.ceil(count / parsedLimit);
-
     return {
       data: rows,
-      total_count: count,
-      prev_enable: parsedPage > 1,
-      next_enable: parsedPage < total_pages,
-      total_pages: total_pages,
-      per_page: parsedLimit,
-      page: parsedPage
+      total_count: totalRecord,
+      prev_enable: pagination.prev_enable,
+      next_enable: pagination.next_enable,
+      total_pages: pagination.total_pages,
+      per_page: pagination.per_page,
+      page: pagination.page
     };
   }
 
